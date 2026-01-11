@@ -1,31 +1,31 @@
-name: Python CI
-
-on:
-  push:
-  pull_request:
-
-jobs:
-  test:
-    runs-on: ubuntu-latest
-
-    steps:
-      - name: Checkout
-        uses: actions/checkout@v4
-
-      - name: Set up Python
-        uses: actions/setup-python@v5
-        with:
-          python-version: "3.10"
-
-      - name: Install dependencies
-        run: |
-          python -m pip install --upgrade pip
-          pip install -r requirements.txt
-
       - name: Smoke test (import)
+        shell: bash
         run: |
           python -c "import pandas; print('pandas OK')"
           python -c "import akshare; print('akshare OK')"
-          python -c "import main; print('import main OK')"
 
+          # 自动在仓库里搜索 main.py（不管在根目录还是子目录/分支结构）
+          python - <<'PY'
+          import pathlib, sys
 
+          matches = list(pathlib.Path(".").rglob("main.py"))
+          if not matches:
+              raise SystemExit("ERROR: main.py not found in this checkout (maybe not on main branch?)")
+
+          p = matches[0]  # 找到第一个 main.py
+          sys.path.insert(0, str(p.parent))  # 把 main.py 所在目录加入 PYTHONPATH
+          import main
+          print("import main OK from:", p)
+          PY
+
+          # 再做一个更稳的检查：所有 .py 能否被编译（不运行，只检查语法）
+          python - <<'PY'
+          import subprocess, sys
+          files = subprocess.check_output(["git", "ls-files", "*.py"], text=True).splitlines()
+          if not files:
+              raise SystemExit("ERROR: no .py files tracked by git in this checkout")
+          import py_compile
+          for f in files:
+              py_compile.compile(f, doraise=True)
+          print(f"py_compile OK: {len(files)} python files")
+          PY
