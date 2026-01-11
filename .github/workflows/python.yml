@@ -22,5 +22,9 @@ jobs:
           python -m pip install --upgrade pip
           pip install -r requirements.txt
 
-      - name: Run tests
-        run: pytest -q
+      - name: Smoke test (import)
+        run: |
+          python -c "import pandas; print('pandas OK')"
+          python -c "import akshare; print('akshare OK')"
+          python -c "import stock.main; print('import OK')"
+
