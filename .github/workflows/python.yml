@@ -26,5 +26,6 @@ jobs:
         run: |
           python -c "import pandas; print('pandas OK')"
           python -c "import akshare; print('akshare OK')"
-          python -c "import stock.main; print('import OK')"
+          python -c "import main; print('import main OK')"
+
 
